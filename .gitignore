@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Generated data
+backend/data/raw/*.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Node.js (future React frontend)
+node_modules/
+frontend/dist/
+
+# Logs
+*.log
+
+# Operating system
+.DS_Store
+Thumbs.db
