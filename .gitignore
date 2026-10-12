@@ -34,3 +34,5 @@ frontend/dist/
 # Operating system
 .DS_Store
 Thumbs.db
+
+.venv312/

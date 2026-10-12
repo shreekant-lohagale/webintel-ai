@@ -10,7 +10,9 @@ class DynamicQuotesSpider(scrapy.Spider):
 
     allowed_domains = ["quotes.toscrape.com"]
 
-    start_urls = ["https://quotes.toscrape.com/js/"]
+    start_urls = [
+        "https://quotes.toscrape.com/js/"
+    ]
 
     custom_settings = {
         "DOWNLOAD_HANDLERS": {
@@ -23,21 +25,39 @@ class DynamicQuotesSpider(scrapy.Spider):
                 "ScrapyPlaywrightDownloadHandler"
             ),
         },
+
+        "TWISTED_REACTOR": (
+            "twisted.internet.asyncioreactor."
+            "AsyncioSelectorReactor"
+        ),
+
         "PLAYWRIGHT_BROWSER_TYPE": "chromium",
+
         "PLAYWRIGHT_LAUNCH_OPTIONS": {
             "headless": True,
         },
+
         "PLAYWRIGHT_MAX_PAGES_PER_CONTEXT": 2,
+
         "PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT": 20000,
+
         "CONCURRENT_REQUESTS": 1,
+
         "CONCURRENT_REQUESTS_PER_DOMAIN": 1,
+
+        "DOWNLOAD_DELAY": 2.0,
+
         "ROBOTSTXT_OBEY": True,
+
         "RETRY_TIMES": 1,
-        "CLOSESPIDER_PAGECOUNT": 2,
+
+        "CLOSESPIDER_PAGECOUNT": 0,
+
+        "LOG_LEVEL": "INFO",
     }
 
     async def start(self):
-        """Schedule the JavaScript-rendered page."""
+        """Start crawling JavaScript-rendered pages."""
 
         for url in self.start_urls:
             yield scrapy.Request(
@@ -45,6 +65,7 @@ class DynamicQuotesSpider(scrapy.Spider):
                 callback=self.parse,
                 meta={
                     "playwright": True,
+
                     "playwright_page_methods": [
                         PageMethod(
                             "wait_for_selector",
@@ -70,25 +91,33 @@ class DynamicQuotesSpider(scrapy.Spider):
             len(quotes),
         )
 
+        if not quotes:
+            self.logger.warning(
+                "No quotes found on page: %s",
+                response.url,
+            )
+            return
+
         for quote in quotes:
+            text = quote.css(
+                "span.text::text"
+            ).get()
+
+            author = quote.css(
+                "small.author::text"
+            ).get()
+
+            tags = quote.css(
+                "div.tags a.tag::text"
+            ).getall()
+
             yield {
-                "text": quote.css(
-                    "span.text::text"
-                ).get(),
-
-                "author": quote.css(
-                    "small.author::text"
-                ).get(),
-
-                "tags": quote.css(
-                    "div.tags a.tag::text"
-                ).getall(),
-
+                "text": text,
+                "author": author,
+                "tags": tags,
                 "source_url": response.url,
-
                 "scraped_at": datetime.now(
                     timezone.utc
                 ).isoformat(),
-
                 "rendering_engine": "playwright",
             }
