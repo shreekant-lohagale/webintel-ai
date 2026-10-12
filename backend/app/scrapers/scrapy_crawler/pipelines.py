@@ -6,7 +6,7 @@ from scrapy.exceptions import DropItem
 
 class CleanQuotePipeline:
 
-    def process_item(self, item, spider):
+    def process_item(self, item):
         """Clean and validate each extracted record."""
 
         text = item.get("text") or ""
