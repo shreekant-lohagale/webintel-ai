@@ -281,6 +281,132 @@ class MongoRepository:
             for record in records
         ]
 
+    async def search_documents(
+        self,
+        *,
+        page: int = 1,
+        page_size: int = 20,
+        document_type: str | None = None,
+        source_domain: str | None = None,
+        tag: str | None = None,
+        q: str | None = None,
+    ) -> tuple[list[WebDocument], int]:
+        """
+        Search and paginate current documents.
+
+        Returns:
+            (documents, total_matching_documents)
+        """
+        import re
+
+        if page < 1:
+            raise ValueError("page must be at least 1")
+
+        if not 1 <= page_size <= 100:
+            raise ValueError(
+                "page_size must be between 1 and 100"
+            )
+
+        filters: dict = {}
+
+        if document_type:
+            filters["document_type"] = document_type
+
+        if source_domain:
+            filters["source_domain"] = (
+                source_domain.lower()
+            )
+
+        if tag:
+            filters["tags"] = {
+                "$regex": f"^{re.escape(tag)}$",
+                "$options": "i",
+            }
+
+        if q:
+            search_pattern = re.escape(q.strip())
+
+            if search_pattern:
+                filters["$or"] = [
+                    {
+                        "title": {
+                            "$regex": search_pattern,
+                            "$options": "i",
+                        }
+                    },
+                    {
+                        "content": {
+                            "$regex": search_pattern,
+                            "$options": "i",
+                        }
+                    },
+                ]
+
+        total = await self.documents.count_documents(
+            filters
+        )
+
+        skip = (page - 1) * page_size
+
+        cursor = (
+            self.documents.find(filters)
+            .sort([
+                ("scraped_at", DESCENDING),
+                ("_id", ASCENDING),
+            ])
+            .skip(skip)
+            .limit(page_size)
+        )
+
+        records = await cursor.to_list(
+            length=page_size
+        )
+
+        items = []
+
+        for record in records:
+            record.pop("_id", None)
+
+            items.append(
+                WebDocument.model_validate(record)
+            )
+
+        return items, total
+
+    async def get_document_overview(
+        self,
+        document_id: str,
+    ) -> dict | None:
+        """
+        Retrieve a document with provenance and
+        revision counts.
+        """
+
+        document = await self.get_document(
+            document_id
+        )
+
+        if document is None:
+            return None
+
+        source_count = (
+            await self.observations.count_documents({
+                "document_id": document_id
+            })
+        )
+
+        revision_count = (
+            await self.revisions.count_documents({
+                "document_id": document_id
+            })
+        )
+
+        return {
+            "document": document,
+            "source_count": source_count,
+            "revision_count": revision_count,
+        }
+
     async def get_sources(
         self,
         document_id: str,

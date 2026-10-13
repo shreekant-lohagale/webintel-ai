@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 
 from app.api.config import Settings, get_settings
+from app.api.routes.documents import (
+    router as documents_router,
+)
 from app.api.routes.health import router as health_router
 from app.storage.mongodb import create_client
 from app.storage.repository import MongoRepository
@@ -86,6 +89,10 @@ def create_app(
 
     api_router.include_router(
         health_router
+    )
+
+    api_router.include_router(
+        documents_router
     )
 
     application.include_router(
