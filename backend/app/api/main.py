@@ -8,6 +8,9 @@ from uuid import uuid4
 from fastapi import APIRouter, FastAPI, Request
 
 from app.api.config import Settings, get_settings
+from app.api.routes.ask import (
+    router as ask_router,
+)
 from app.api.routes.health import router as health_router
 from app.api.routes.documents import (
     router as documents_router,
@@ -172,6 +175,7 @@ def create_app(
     api_router.include_router(documents_router)
     api_router.include_router(crawl_jobs_router)
     api_router.include_router(search_router)
+    api_router.include_router(ask_router)
 
     application.include_router(api_router)
 
