@@ -6,3 +6,4 @@ scrapy>=2.13,<3.0
 scrapy-playwright>=0.0.40,<1.0
 pytest>=8.0,<10.0
 
+pydantic>=2.10,<3.0
