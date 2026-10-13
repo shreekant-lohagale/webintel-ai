@@ -1,9 +1,11 @@
 
+import os
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import (
     APIRouter,
+    Depends,
     HTTPException,
     Query,
     Request,
@@ -15,6 +17,7 @@ from app.api.schemas.crawl_jobs import (
     CrawlJobCreate,
     CrawlJobListResponse,
 )
+from app.api.security import require_api_key
 from app.jobs.repository import CrawlJobRepository
 from app.pipeline.run import validate_start_url
 
@@ -52,9 +55,11 @@ def get_jobs_repository(
 async def submit_crawl_job(
     payload: CrawlJobCreate,
     request: Request,
+    identity: Annotated[
+        str,
+        Depends(require_api_key),
+    ],
 ):
-    # API execution is deliberately limited to the
-    # localhost article test fixture in this milestone.
     try:
         mode = validate_start_url(
             payload.start_url,
@@ -62,9 +67,7 @@ async def submit_crawl_job(
         )
 
         if mode != "local":
-            raise ValueError(
-                "Only local test crawling is enabled"
-            )
+            raise ValueError("Disallowed crawl source")
 
     except (ValueError, TypeError):
         raise HTTPException(
@@ -87,6 +90,33 @@ async def submit_crawl_job(
         raise HTTPException(
             status_code=503,
             detail="Crawl worker unavailable",
+        )
+
+    limiter = getattr(
+        request.app.state,
+        "submission_limiter",
+        None,
+    )
+
+    if limiter is not None and not limiter.check(identity):
+        raise HTTPException(
+            status_code=429,
+            detail="Crawl submission rate limit exceeded",
+        )
+
+    max_queued = int(
+        os.getenv(
+            "WEBINTEL_MAX_QUEUED_JOBS",
+            "20",
+        )
+    )
+
+    max_queued = max(1, min(max_queued, 1000))
+
+    if await repository.active_count() >= max_queued:
+        raise HTTPException(
+            status_code=429,
+            detail="Crawl queue is full",
         )
 
     job = await repository.create(payload)
@@ -129,7 +159,7 @@ async def list_crawl_jobs(
 @router.get(
     "/{job_id}",
     response_model=CrawlJob,
-    summary="Get crawl-job status",
+    summary="Retrieve crawl-job status",
 )
 async def get_crawl_job(
     job_id: UUID,
@@ -146,3 +176,61 @@ async def get_crawl_job(
         )
 
     return job
+
+
+@router.post(
+    "/{job_id}/cancel",
+    response_model=CrawlJob,
+    summary="Cancel a queued or running crawl job",
+)
+async def cancel_crawl_job(
+    job_id: UUID,
+    request: Request,
+    identity: Annotated[
+        str,
+        Depends(require_api_key),
+    ],
+):
+    repository = get_jobs_repository(request)
+
+    job = await repository.get(job_id)
+
+    if job is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Crawl job not found",
+        )
+
+    if job.status in ("completed", "failed"):
+        raise HTTPException(
+            status_code=409,
+            detail="Finished jobs cannot be cancelled",
+        )
+
+    if job.status == "cancelled":
+        return job
+
+    cancelled = await repository.cancel(job_id)
+
+    if cancelled is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Crawl job not found",
+        )
+
+    if cancelled.status != "cancelled":
+        raise HTTPException(
+            status_code=409,
+            detail="Job already reached a terminal state",
+        )
+
+    worker = getattr(
+        request.app.state,
+        "crawl_worker",
+        None,
+    )
+
+    if worker is not None:
+        worker.notify()
+
+    return cancelled

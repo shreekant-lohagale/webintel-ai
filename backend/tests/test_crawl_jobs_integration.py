@@ -12,6 +12,14 @@ from app.api.main import create_app
 from app.storage.mongodb import create_client
 
 
+@pytest.fixture(autouse=True)
+def mock_api_auth(monkeypatch):
+    monkeypatch.setenv(
+        "WEBINTEL_API_KEY",
+        "webintel-test-key",
+    )
+
+
 pytestmark = pytest.mark.skipif(
     os.getenv("WEBINTEL_RUN_MONGO_TESTS") != "1",
     reason="MongoDB integration tests are opt-in",
@@ -77,6 +85,10 @@ def test_crawl_job_lifecycle():
     # It never reuses the development database.
     try:
         with TestClient(app) as client:
+            client.headers.update({
+                "X-API-Key": "webintel-test-key"
+            })
+
             payload = {
                 "start_url":
                     "http://127.0.0.1:8766/",
@@ -149,9 +161,12 @@ def test_crawl_job_lifecycle():
                 "failed",
             )
 
-            assert "Simulated crawler failure" in (
-                failed["error"]
+            assert failed["status"] == "failed"
+            assert failed["error"] == (
+                "Crawler execution failed"
             )
+            assert failed["result"] is None
+            assert failed["finished_at"] is not None
 
             missing = client.get(
                 "/api/v1/crawl/jobs/"

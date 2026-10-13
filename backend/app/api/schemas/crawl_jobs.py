@@ -11,6 +11,7 @@ JobStatus = Literal[
     "running",
     "completed",
     "failed",
+    "cancelled",
 ]
 
 
@@ -22,6 +23,7 @@ class CrawlJobCreate(BaseModel):
         min_length=1,
         max_length=2048,
     )
+
     browser: bool = False
 
 

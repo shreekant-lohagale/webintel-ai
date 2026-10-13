@@ -15,10 +15,11 @@ def utc_now() -> datetime:
 
 
 class CrawlJobRepository:
+
     def __init__(self, database):
         self.collection = database["crawl_jobs"]
 
-    async def ensure_indexes(self):
+    async def ensure_indexes(self) -> None:
         await self.collection.create_index(
             [
                 ("status", ASCENDING),
@@ -37,6 +38,7 @@ class CrawlJobRepository:
 
         data = dict(record)
         data["job_id"] = data.pop("_id")
+
         return CrawlJob.model_validate(data)
 
     async def create(
@@ -58,17 +60,18 @@ class CrawlJobRepository:
         }
 
         await self.collection.insert_one(record)
+
         return self.decode(record)
 
     async def get(
         self,
         job_id: UUID | str,
     ) -> CrawlJob | None:
-        record = await self.collection.find_one(
-            {"_id": str(job_id)}
+        return self.decode(
+            await self.collection.find_one({
+                "_id": str(job_id)
+            })
         )
-
-        return self.decode(record)
 
     async def list_jobs(
         self,
@@ -76,10 +79,14 @@ class CrawlJobRepository:
         skip: int = 0,
     ) -> tuple[list[CrawlJob], int]:
         if not 1 <= limit <= 100:
-            raise ValueError("limit must be between 1 and 100")
+            raise ValueError(
+                "limit must be between 1 and 100"
+            )
 
         if skip < 0:
-            raise ValueError("skip cannot be negative")
+            raise ValueError(
+                "skip cannot be negative"
+            )
 
         total = await self.collection.count_documents({})
 
@@ -100,13 +107,16 @@ class CrawlJobRepository:
             for record in records
         ], total
 
+    async def active_count(self) -> int:
+        """Count jobs consuming queue capacity."""
+
+        return await self.collection.count_documents({
+            "status": {
+                "$in": ["queued", "running"]
+            }
+        })
+
     async def claim_next(self) -> CrawlJob | None:
-        """
-        Atomically claim one queued job.
-
-        A job cannot be claimed twice concurrently.
-        """
-
         record = await self.collection.find_one_and_update(
             {"status": "queued"},
             {
@@ -170,14 +180,40 @@ class CrawlJobRepository:
 
         return updated.modified_count == 1
 
+    async def cancel(
+        self,
+        job_id: UUID | str,
+    ) -> CrawlJob | None:
+        """
+        Atomically cancel queued/running jobs.
+
+        Completed and failed jobs stay unchanged.
+        """
+
+        record = await self.collection.find_one_and_update(
+            {
+                "_id": str(job_id),
+                "status": {
+                    "$in": ["queued", "running"]
+                },
+            },
+            {
+                "$set": {
+                    "status": "cancelled",
+                    "finished_at": utc_now(),
+                    "error": None,
+                    "result": None,
+                }
+            },
+            return_document=ReturnDocument.AFTER,
+        )
+
+        if record is not None:
+            return self.decode(record)
+
+        return await self.get(job_id)
+
     async def recover_interrupted(self) -> int:
-        """
-        Mark jobs left running by a previous process as failed.
-
-        This is appropriate for the single-process local
-        worker. A distributed deployment requires leases.
-        """
-
         updated = await self.collection.update_many(
             {"status": "running"},
             {

@@ -8,6 +8,14 @@ from app.api.schemas.crawl_jobs import CrawlJobCreate
 from app.pipeline.run import validate_start_url
 
 
+@pytest.fixture(autouse=True)
+def mock_api_auth(monkeypatch):
+    monkeypatch.setenv(
+        "WEBINTEL_API_KEY",
+        "webintel-test-key",
+    )
+
+
 def test_default_job_payload():
     payload = CrawlJobCreate()
 
@@ -57,6 +65,9 @@ def test_crawl_service_unavailable():
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/crawl/jobs",
+            headers={
+                "X-API-Key": "webintel-test-key"
+            },
             json={
                 "start_url":
                     "http://127.0.0.1:8766/",
@@ -72,6 +83,9 @@ def test_invalid_url_rejected_before_database():
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/crawl/jobs",
+            headers={
+                "X-API-Key": "webintel-test-key"
+            },
             json={
                 "start_url":
                     "https://example.com/news/",
