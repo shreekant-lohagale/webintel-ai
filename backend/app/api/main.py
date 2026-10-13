@@ -4,10 +4,21 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 
 from app.api.config import Settings, get_settings
+from app.api.routes.health import (
+    router as health_router,
+)
 from app.api.routes.documents import (
     router as documents_router,
 )
-from app.api.routes.health import router as health_router
+from app.api.routes.crawl_jobs import (
+    router as crawl_jobs_router,
+)
+from app.jobs.repository import CrawlJobRepository
+from app.jobs.worker import (
+    CrawlJobWorker,
+    JobRunner,
+    execute_crawl_job,
+)
 from app.storage.mongodb import create_client
 from app.storage.repository import MongoRepository
 
@@ -15,22 +26,18 @@ from app.storage.repository import MongoRepository
 def create_app(
     settings: Settings | None = None,
     connect_db: bool = True,
+    job_runner: JobRunner = execute_crawl_job,
 ) -> FastAPI:
-    """
-    Application factory.
-
-    connect_db=False is intended for isolated API
-    foundation tests, not normal deployment.
-    """
-
     settings = settings or get_settings()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        # Initialize application state.
         app.state.mongodb_client = None
         app.state.mongodb_database = None
         app.state.repository = None
+
+        app.state.jobs_repository = None
+        app.state.crawl_worker = None
 
         if not connect_db:
             yield
@@ -40,29 +47,47 @@ def create_app(
             uri=settings.mongodb_uri
         )
 
+        worker = None
+
         try:
-            # Fail startup if MongoDB cannot be reached.
             await client.admin.command("ping")
 
             database = client[
                 settings.mongodb_database
             ]
 
-            repository = MongoRepository(
+            repository = MongoRepository(database)
+            await repository.ensure_indexes()
+
+            jobs_repository = CrawlJobRepository(
                 database
             )
 
-            # Safe to call again: MongoDB retains
-            # existing indexes.
-            await repository.ensure_indexes()
+            await jobs_repository.ensure_indexes()
+
+            worker = CrawlJobWorker(
+                repository=jobs_repository,
+                database_name=settings.mongodb_database,
+                runner=job_runner,
+            )
 
             app.state.mongodb_client = client
             app.state.mongodb_database = database
             app.state.repository = repository
 
+            app.state.jobs_repository = jobs_repository
+            app.state.crawl_worker = worker
+
+            await worker.start()
+
             yield
 
         finally:
+            if worker is not None:
+                await worker.stop()
+
+            app.state.crawl_worker = None
+            app.state.jobs_repository = None
             app.state.repository = None
             app.state.mongodb_database = None
             app.state.mongodb_client = None
@@ -87,17 +112,11 @@ def create_app(
         prefix="/api/v1"
     )
 
-    api_router.include_router(
-        health_router
-    )
+    api_router.include_router(health_router)
+    api_router.include_router(documents_router)
+    api_router.include_router(crawl_jobs_router)
 
-    api_router.include_router(
-        documents_router
-    )
-
-    application.include_router(
-        api_router
-    )
+    application.include_router(api_router)
 
     @application.get(
         "/",
