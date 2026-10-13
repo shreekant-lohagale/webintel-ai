@@ -1,0 +1,30 @@
+
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: webintel-mongodb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: webintel_dev
+      MONGO_INITDB_ROOT_PASSWORD: webintel_local_only
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          mongosh --quiet
+          --username "$$MONGO_INITDB_ROOT_USERNAME"
+          --password "$$MONGO_INITDB_ROOT_PASSWORD"
+          --authenticationDatabase admin
+          --eval "db.adminCommand({ ping: 1 }).ok"
+          | grep -q 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  mongodb_data:

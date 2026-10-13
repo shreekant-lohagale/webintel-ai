@@ -7,3 +7,6 @@ scrapy-playwright>=0.0.40,<1.0
 pytest>=8.0,<10.0
 
 pydantic>=2.10,<3.0
+
+pymongo>=4.13,<5.0
+python-dotenv>=1.0,<2.0

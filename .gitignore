@@ -36,3 +36,9 @@ frontend/dist/
 Thumbs.db
 
 .venv312/
+
+.env
+.env.*
+!.env.example
+.venv312/
+backend/data/processed/
