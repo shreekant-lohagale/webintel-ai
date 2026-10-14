@@ -42,3 +42,29 @@ Thumbs.db
 !.env.example
 .venv312/
 backend/data/processed/
+backend/data/raw/*.json
+backend/data/processed/
+backend/logs/
+.env
+.venv312/
+
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python environments
+.venv/
+.venv312/
+
+# Generated WebIntel data
+backend/data/processed/
+backend/data/raw/*.json
+backend/logs/
+
+# Evaluation reports
+backend/evaluation/reports/
+
+# Local diagnostics
+backend/check_groq.py

@@ -1,0 +1,46 @@
+
+{
+  "dataset_id": "webintel-article-eval-v1",
+  "database": "webintel_ai_article_dev",
+  "description": "Small deterministic smoke-evaluation dataset for the two indexed mock articles.",
+  "cases": [
+    {
+      "id": "R001",
+      "question": "What are the components of reliable data pipelines?",
+      "mode": "hybrid",
+      "relevant_document_ids": [
+        "a10e3eeb27d4e65c4bdfe7e1c0cef8d31e41bf96e1fc22175999126c328c9dd8"
+      ],
+      "expected_behavior": "answered",
+      "reference_answer": "Reliable data pipelines combine extraction, validation, provenance, and durable storage."
+    },
+    {
+      "id": "R002",
+      "question": "How does artificial intelligence help business workflows?",
+      "mode": "hybrid",
+      "relevant_document_ids": [
+        "c35c40656f54ceacfb71393085857658b9e3f1cafac3440e0f127f1e8c09f168"
+      ],
+      "expected_behavior": "answered",
+      "reference_answer": "Artificial intelligence helps teams organize information and improve workflows."
+    },
+    {
+      "id": "R003",
+      "question": "What practices are mentioned for extraction, validation and data provenance?",
+      "mode": "hybrid",
+      "relevant_document_ids": [
+        "a10e3eeb27d4e65c4bdfe7e1c0cef8d31e41bf96e1fc22175999126c328c9dd8"
+      ],
+      "expected_behavior": "answered",
+      "reference_answer": "The source lists extraction, validation, provenance and durable storage as components of reliable data pipelines."
+    },
+    {
+      "id": "N001",
+      "question": "What was Tesla's net profit in 2025?",
+      "mode": "hybrid",
+      "relevant_document_ids": [],
+      "expected_behavior": "abstained",
+      "reference_answer": null
+    }
+  ]
+}
