@@ -24,6 +24,9 @@ from app.api.routes.crawl_jobs import (
 from app.api.routes.search import (
     router as search_router,
 )
+from app.api.routes.topic_analytics import (
+    router as topic_analytics_router,
+)
 from app.api.security import SubmissionLimiter
 from app.jobs.repository import CrawlJobRepository
 from app.jobs.worker import (
@@ -180,6 +183,7 @@ def create_app(
     api_router.include_router(search_router)
     api_router.include_router(ask_router)
     api_router.include_router(analytics_router)
+    api_router.include_router(topic_analytics_router)
 
     application.include_router(api_router)
 
