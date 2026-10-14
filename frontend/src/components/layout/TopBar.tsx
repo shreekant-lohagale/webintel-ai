@@ -7,7 +7,7 @@ import { queryKeys } from '../../lib/queryKeys'
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/': { title: 'Intelligence Overview', description: 'Signals, coverage, and activity across your intelligence corpus.' },
   '/documents': { title: 'Document Explorer', description: 'Browse normalized sources, immutable revisions, and provenance.' },
-  '/search': { title: 'Search', description: 'Find evidence across indexed public web sources.' },
+  '/search': { title: 'Intelligence Search', description: 'Retrieve indexed evidence with keyword, vector, or hybrid ranking.' },
   '/assistant': { title: 'AI Assistant', description: 'Ask grounded questions with source-backed answers.' },
   '/topics': { title: 'Topic Intelligence', description: 'Track deterministic keyword patterns and trends.' },
   '/monitoring': { title: 'Source Monitoring', description: 'Review provenance coverage and observation age.' },

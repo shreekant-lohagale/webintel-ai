@@ -1,6 +1,6 @@
 # WebIntel AI Frontend
 
-Production-oriented React interface for the WebIntel AI FastAPI service. It includes the live intelligence overview and a document workspace for exploring the indexed corpus, immutable revisions, backend-generated comparisons, and source provenance. Remaining navigation destinations are intentional placeholders for later milestones.
+Production-oriented React interface for the WebIntel AI FastAPI service. It includes the live intelligence overview, document and provenance exploration, and hybrid evidence search across indexed chunks. Remaining navigation destinations are intentional placeholders for later milestones.
 
 ## Requirements
 
@@ -80,10 +80,13 @@ The production output is written to `frontend\dist`.
 - `GET /api/v1/documents/{document_id}/revisions`
 - `GET /api/v1/analytics/documents/{document_id}/changes`
 - `GET /api/v1/analytics/documents/{document_id}/compare?from_revision_id=<id>&to_revision_id=<id>`
+- `POST /api/v1/search`
 
 Revision windows use explicit UTC midnights and the backend's exclusive `end` boundary. The UI offers 7, 14, and 30 days, all below the backend's 90-day maximum.
 
 Document filters are synchronized to URL search parameters and executed by MongoDB through the existing API. Free-text search covers title and content. The backend currently fixes list ordering to newest `scraped_at`, then document ID; the UI labels that limitation rather than applying incomplete client-side sorting. Revision counts are not part of list responses and are therefore shown only after opening a document.
+
+Intelligence Search synchronizes the submitted query, retrieval mode, result limit, document type, and exact source domain with the URL. The backend supports `keyword` (BM25), `semantic` (embedding cosine similarity), and `hybrid` (reciprocal-rank fusion) retrieval. Scores are displayed as mode-specific ranking signals and are never converted into confidence percentages or compared across modes.
 
 ## Troubleshooting
 
@@ -92,4 +95,6 @@ Document filters are synchronized to URL search parameters and executed by Mongo
 - **Empty dashboard:** this is a valid state. Ingest documents with the existing backend workflows; the frontend never substitutes demo data.
 - **Invalid server response:** the UI validates analytics payloads at runtime. Confirm the running backend matches this repository's dashboard service contracts.
 - **Document not found:** verify the route contains the complete 64-character SHA-256 document ID and that the current document still exists in the configured database.
+- **Search unavailable:** verify MongoDB is ready and the configured embedding model can initialize. The first semantic or hybrid request may take longer while the local model loads.
+- **No search matches:** ensure document chunks were indexed with the backend's current embedding configuration; search intentionally ignores mismatched index configurations.
 - **Production cross-origin failure:** use a same-origin reverse proxy. Do not enable wildcard CORS with credentials.

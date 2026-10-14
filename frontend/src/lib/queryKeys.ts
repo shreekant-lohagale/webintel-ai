@@ -16,4 +16,8 @@ export const queryKeys = {
     comparison: (documentId: string, from: string, to: string) =>
       ['documents', 'comparison', documentId, from, to] as const,
   },
+  search: {
+    all: ['search'] as const,
+    results: (request: object) => ['search', 'results', request] as const,
+  },
 }

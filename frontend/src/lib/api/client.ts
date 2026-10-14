@@ -25,7 +25,7 @@ function errorDetail(payload: unknown): string | null {
 
 export async function apiRequest(
   path: string,
-  options: { signal?: AbortSignal; timeoutMs?: number } = {},
+  options: { signal?: AbortSignal; timeoutMs?: number; method?: 'GET' | 'POST'; body?: unknown } = {},
 ): Promise<unknown> {
   const controller = new AbortController()
   const timeoutMs = options.timeoutMs ?? 10_000
@@ -39,7 +39,12 @@ export async function apiRequest(
 
   try {
     const response = await fetch(`${baseUrl}${path}`, {
-      headers: { Accept: 'application/json' },
+      method: options.method ?? 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: controller.signal,
     })
     let payload: unknown
