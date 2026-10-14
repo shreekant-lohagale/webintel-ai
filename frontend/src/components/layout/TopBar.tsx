@@ -8,7 +8,7 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   '/': { title: 'Intelligence Overview', description: 'Signals, coverage, and activity across your intelligence corpus.' },
   '/documents': { title: 'Document Explorer', description: 'Browse normalized sources, immutable revisions, and provenance.' },
   '/search': { title: 'Intelligence Search', description: 'Retrieve indexed evidence with keyword, vector, or hybrid ranking.' },
-  '/assistant': { title: 'AI Assistant', description: 'Ask grounded questions with source-backed answers.' },
+  '/assistant': { title: 'AI Assistant', description: 'Ask independent questions and inspect verified supporting evidence.' },
   '/topics': { title: 'Topic Intelligence', description: 'Track deterministic keyword patterns and trends.' },
   '/monitoring': { title: 'Source Monitoring', description: 'Review provenance coverage and observation age.' },
   '/settings': { title: 'Settings', description: 'Configure your WebIntel AI workspace.' },

@@ -5,6 +5,7 @@ import { DocumentDetailPage } from '../pages/DocumentDetailPage'
 import { DocumentsPage } from '../pages/DocumentsPage'
 import { PlaceholderPage } from '../pages/PlaceholderPage'
 import { SearchPage } from '../pages/SearchPage'
+import { AssistantPage } from '../pages/AssistantPage'
 
 export function App() {
   return (
@@ -14,7 +15,7 @@ export function App() {
         <Route path="documents" element={<DocumentsPage />} />
         <Route path="documents/:documentId" element={<DocumentDetailPage />} />
         <Route path="search" element={<SearchPage />} />
-        <Route path="assistant" element={<PlaceholderPage section="AI Assistant" />} />
+        <Route path="assistant" element={<AssistantPage />} />
         <Route path="topics" element={<PlaceholderPage section="Topic Intelligence" />} />
         <Route path="monitoring" element={<PlaceholderPage section="Source Monitoring" />} />
         <Route path="settings" element={<PlaceholderPage section="Settings" />} />

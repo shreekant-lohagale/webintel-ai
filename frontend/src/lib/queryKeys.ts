@@ -20,4 +20,7 @@ export const queryKeys = {
     all: ['search'] as const,
     results: (request: object) => ['search', 'results', request] as const,
   },
+  assistant: {
+    all: ['assistant'] as const,
+  },
 }
