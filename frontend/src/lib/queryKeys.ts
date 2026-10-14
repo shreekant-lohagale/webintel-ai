@@ -23,4 +23,16 @@ export const queryKeys = {
   assistant: {
     all: ['assistant'] as const,
   },
+  topics: {
+    all: ['topics'] as const,
+    terms: (params: object) => ['topics', 'terms', params] as const,
+    domains: (params: object) => ['topics', 'domains', params] as const,
+    trends: (params: object) => ['topics', 'trends', params] as const,
+  },
+  monitoring: {
+    all: ['monitoring'] as const,
+    overview: (params: object) => ['monitoring', 'overview', params] as const,
+    documents: (params: object) => ['monitoring', 'documents', params] as const,
+    domains: (params: object) => ['monitoring', 'domains', params] as const,
+  },
 }

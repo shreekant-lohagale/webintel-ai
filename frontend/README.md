@@ -1,6 +1,6 @@
 # WebIntel AI Frontend
 
-Production-oriented React interface for the WebIntel AI FastAPI service. It includes the live intelligence overview, document and provenance exploration, hybrid evidence search, and a grounded RAG assistant across indexed chunks. Remaining navigation destinations are intentional placeholders for later milestones.
+Production-oriented React interface for the WebIntel AI FastAPI service. It includes the live intelligence overview, document and provenance exploration, hybrid evidence search, a grounded RAG assistant, deterministic topic intelligence, and source-observation monitoring. Settings remains an intentional placeholder for a later milestone.
 
 ## Requirements
 
@@ -82,6 +82,12 @@ The production output is written to `frontend\dist`.
 - `GET /api/v1/analytics/documents/{document_id}/compare?from_revision_id=<id>&to_revision_id=<id>`
 - `POST /api/v1/search`
 - `POST /api/v1/ask`
+- `GET /api/v1/analytics/topics`
+- `GET /api/v1/analytics/topics/domains`
+- `GET /api/v1/analytics/topics/trends`
+- `GET /api/v1/analytics/monitoring/overview`
+- `GET /api/v1/analytics/monitoring/documents`
+- `GET /api/v1/analytics/monitoring/domains`
 
 Revision windows use explicit UTC midnights and the backend's exclusive `end` boundary. The UI offers 7, 14, and 30 days, all below the backend's 90-day maximum.
 
@@ -90,6 +96,10 @@ Document filters are synchronized to URL search parameters and executed by Mongo
 Intelligence Search synchronizes the submitted query, retrieval mode, result limit, document type, and exact source domain with the URL. The backend supports `keyword` (BM25), `semantic` (embedding cosine similarity), and `hybrid` (reciprocal-rank fusion) retrieval. Scores are displayed as mode-specific ranking signals and are never converted into confidence percentages or compared across modes.
 
 The AI Assistant submits one independent question per `POST /api/v1/ask` request. Visible turns are kept in React memory only and are neither persisted nor sent as conversation history. Answer claims, citation identifiers, quotations, document links, abstention reasons, and model metadata are displayed only from the validated backend response. The browser uses a 70-second request window to accommodate the backend provider timeout and supports cancellation and exact-request retry.
+
+Topic Intelligence reports deterministic unigram or unigram-plus-bigram document frequency. Revision trends compare the latest available revision per document in two ordered, non-overlapping UTC windows with an overall horizon of at most 366 days. An empty baseline is called out explicitly; lexical change is not presented as semantic classification or evidence of public popularity.
+
+Source Monitoring classifies the age of recorded observations using a shared fixed `as_of` timestamp and configurable `fresh_hours` / `stale_hours` thresholds. The document endpoint is a bounded list (`limit` 1–100), not a paginated or user-sortable API. Provenance coverage refers only to indexed documents and does not establish crawl events, content freshness, complete website coverage, or current source availability.
 
 ## Troubleshooting
 
@@ -102,4 +112,6 @@ The AI Assistant submits one independent question per `POST /api/v1/ask` request
 - **No search matches:** ensure document chunks were indexed with the backend's current embedding configuration; search intentionally ignores mismatched index configurations.
 - **Assistant abstained:** this is an intentional grounded outcome when retrieval or citation validation cannot support an answer. Broaden the retrieval controls or inspect the linked search results.
 - **Language-model provider unavailable:** verify the backend's Groq configuration and provider connectivity. The frontend does not contain or require the provider secret.
+- **Topic window rejected:** use explicit UTC dates satisfying `before_start < before_end <= after_start < after_end`; the combined horizon cannot exceed 366 days.
+- **Monitoring thresholds rejected:** use whole hours satisfying `1 <= fresh_hours < stale_hours <= 87600` and a timezone-aware evaluation timestamp.
 - **Production cross-origin failure:** use a same-origin reverse proxy. Do not enable wildcard CORS with credentials.

@@ -1,0 +1,12 @@
+import { Link } from 'react-router-dom'
+import { Panel, PanelHeader } from '../../components/ui/Panel'
+import { EmptyState, ErrorState, Skeleton } from '../../components/ui/States'
+import { errorMessage } from '../../lib/error'
+import type { DomainTopicsReport } from '../../types/topics'
+
+export function DomainTopicBreakdown({ data, loading, error, selected, onSelect, onRetry }: { data?: DomainTopicsReport; loading: boolean; error: Error | null; selected: string; onSelect: (domain: string) => void; onRetry: () => void }) {
+  const domain = data?.domains.find((item) => item.source_domain === selected) ?? data?.domains[0]
+  return <Panel><PanelHeader title="Domain topic breakdown" description="Lexical frequencies grouped by each document’s current source domain." action={data?.domains.length ? <select aria-label="Topic domain" value={domain?.source_domain ?? ''} onChange={(e) => onSelect(e.target.value)} className="focus-ring rounded-lg border border-white/10 bg-ink px-2 py-1.5 text-xs text-slate-300">{data.domains.map((item) => <option key={item.source_domain}>{item.source_domain}</option>)}</select> : undefined} />
+    {loading ? <div className="p-6"><Skeleton className="h-48" /></div> : error ? <ErrorState message={errorMessage(error)} onRetry={onRetry} /> : !domain ? <EmptyState title="No source domains" description="Domain topic groups appear after documents are indexed." /> : <div className="p-5"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-slate-200">{domain.source_domain}</p><p className="mt-1 text-[11px] text-slate-500">{domain.document_count} indexed document{domain.document_count === 1 ? '' : 's'}</p></div><Link to={`/documents?domain=${encodeURIComponent(domain.source_domain)}`} className="focus-ring text-xs font-medium text-teal-300 hover:underline">View documents</Link></div><div className="mt-4 space-y-2">{domain.terms.map((term) => <div key={term.term} className="grid grid-cols-[minmax(100px,1fr)_2fr_32px] items-center gap-3 text-xs"><span className="truncate text-slate-400">{term.term}</span><span className="h-1.5 overflow-hidden rounded-full bg-white/[0.05]"><i className="block h-full rounded-full bg-indigo-400/70" style={{ width: `${Math.max(4, term.document_frequency / domain.document_count * 100)}%` }} /></span><span className="text-right font-mono text-slate-500">{term.document_frequency}</span></div>)}</div></div>}
+  </Panel>
+}

@@ -1,0 +1,10 @@
+import { Link } from 'react-router-dom'
+import { Panel, PanelHeader } from '../../components/ui/Panel'
+import { EmptyState, ErrorState, Skeleton } from '../../components/ui/States'
+import { errorMessage } from '../../lib/error'
+import { formatDateTime, formatPercentage } from '../../lib/format'
+import type { MonitoringDomains } from '../../types/monitoring'
+
+export function DomainCoverage({ data, loading, error, onRetry }: { data?: MonitoringDomains; loading: boolean; error: Error | null; onRetry: () => void }) {
+  return <Panel><PanelHeader title="Domain provenance coverage" description="Observed-document ratios within the indexed corpus—not coverage of an entire website." />{loading ? <div className="p-6"><Skeleton className="h-44" /></div> : error ? <ErrorState message={errorMessage(error)} onRetry={onRetry} /> : !data?.domains.length ? <EmptyState title="No domain coverage" description="Domain statistics appear after documents are indexed." /> : <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-xs"><thead className="border-b border-white/[0.06] text-[10px] uppercase text-slate-600"><tr><th className="px-5 py-3">Domain</th><th>Documents</th><th>Observed</th><th>Coverage</th><th>Latest observation</th><th className="pr-5">Freshness breakdown</th></tr></thead><tbody>{data.domains.map((domain) => <tr key={domain.source_domain} className="border-b border-white/[0.045]"><td className="px-5 py-3"><Link to={`/documents?domain=${encodeURIComponent(domain.source_domain)}`} className="focus-ring font-medium text-teal-300 hover:underline">{domain.source_domain}</Link></td><td>{domain.document_count}</td><td>{domain.observed_document_count}</td><td>{formatPercentage(domain.coverage_ratio)}</td><td className="text-[10px] text-slate-500">{formatDateTime(domain.latest_observed_at)}</td><td className="pr-5 font-mono text-[9px] text-slate-500">recent {domain.status_counts.recently_observed} · aging {domain.status_counts.aging_observation} · stale {domain.status_counts.stale_observation} · unknown {domain.status_counts.unknown}</td></tr>)}</tbody></table></div>}</Panel>
+}
