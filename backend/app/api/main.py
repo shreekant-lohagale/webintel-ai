@@ -22,6 +22,7 @@ from app.api.routes.documents import (
 from app.api.routes.crawl_jobs import (
     router as crawl_jobs_router,
 )
+from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.search import (
     router as search_router,
 )
@@ -186,6 +187,7 @@ def create_app(
     api_router.include_router(analytics_router)
     api_router.include_router(topic_analytics_router)
     api_router.include_router(monitoring_router)
+    api_router.include_router(dashboard_router)
 
     application.include_router(api_router)
 
