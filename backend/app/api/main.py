@@ -8,6 +8,9 @@ from uuid import uuid4
 from fastapi import APIRouter, FastAPI, Request
 
 from app.api.config import Settings, get_settings
+from app.api.routes.analytics import (
+    router as analytics_router,
+)
 from app.api.routes.ask import (
     router as ask_router,
 )
@@ -176,6 +179,7 @@ def create_app(
     api_router.include_router(crawl_jobs_router)
     api_router.include_router(search_router)
     api_router.include_router(ask_router)
+    api_router.include_router(analytics_router)
 
     application.include_router(api_router)
 
