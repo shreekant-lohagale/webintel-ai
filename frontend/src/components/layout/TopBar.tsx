@@ -6,7 +6,7 @@ import { queryKeys } from '../../lib/queryKeys'
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/': { title: 'Intelligence Overview', description: 'Signals, coverage, and activity across your intelligence corpus.' },
-  '/documents': { title: 'Documents', description: 'Browse and inspect normalized source documents.' },
+  '/documents': { title: 'Document Explorer', description: 'Browse normalized sources, immutable revisions, and provenance.' },
   '/search': { title: 'Search', description: 'Find evidence across indexed public web sources.' },
   '/assistant': { title: 'AI Assistant', description: 'Ask grounded questions with source-backed answers.' },
   '/topics': { title: 'Topic Intelligence', description: 'Track deterministic keyword patterns and trends.' },
@@ -17,18 +17,19 @@ const pageMeta: Record<string, { title: string; description: string }> = {
 export function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
   const location = useLocation()
   const queryClient = useQueryClient()
-  const meta = pageMeta[location.pathname] ?? pageMeta['/']!
+  const meta = location.pathname.startsWith('/documents/')
+    ? { title: 'Document Detail', description: 'Inspect extracted content, change history, and source lineage.' }
+    : (pageMeta[location.pathname] ?? pageMeta['/']!)
   const health = useQuery({
     queryKey: queryKeys.readiness,
     queryFn: ({ signal }) => dashboardApi.readiness(signal),
     refetchInterval: 30_000,
     retry: 1,
   })
-  const isRefreshing = queryClient.isFetching({ queryKey: ['dashboard'] }) > 0
+  const isRefreshing = queryClient.isFetching() > 0
 
   const refresh = () => {
-    void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-    void queryClient.invalidateQueries({ queryKey: queryKeys.readiness })
+    void queryClient.invalidateQueries()
   }
 
   return (

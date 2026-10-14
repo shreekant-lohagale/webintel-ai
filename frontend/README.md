@@ -1,6 +1,6 @@
 # WebIntel AI Frontend
 
-Production-oriented React dashboard for the WebIntel AI FastAPI service. Milestone 1 implements the intelligence overview with live backend data; the remaining navigation destinations are intentional placeholders for later milestones.
+Production-oriented React interface for the WebIntel AI FastAPI service. It includes the live intelligence overview and a document workspace for exploring the indexed corpus, immutable revisions, backend-generated comparisons, and source provenance. Remaining navigation destinations are intentional placeholders for later milestones.
 
 ## Requirements
 
@@ -74,8 +74,16 @@ The production output is written to `frontend\dist`.
 - `GET /api/v1/analytics/dashboard/summary`
 - `GET /api/v1/analytics/dashboard/domains`
 - `GET /api/v1/analytics/dashboard/revision-activity?start=<UTC>&end=<UTC>`
+- `GET /api/v1/documents?page=<n>&page_size=<n>&q=<term>&document_type=<type>&source_domain=<domain>&tag=<tag>`
+- `GET /api/v1/documents/{document_id}`
+- `GET /api/v1/documents/{document_id}/sources`
+- `GET /api/v1/documents/{document_id}/revisions`
+- `GET /api/v1/analytics/documents/{document_id}/changes`
+- `GET /api/v1/analytics/documents/{document_id}/compare?from_revision_id=<id>&to_revision_id=<id>`
 
 Revision windows use explicit UTC midnights and the backend's exclusive `end` boundary. The UI offers 7, 14, and 30 days, all below the backend's 90-day maximum.
+
+Document filters are synchronized to URL search parameters and executed by MongoDB through the existing API. Free-text search covers title and content. The backend currently fixes list ordering to newest `scraped_at`, then document ID; the UI labels that limitation rather than applying incomplete client-side sorting. Revision counts are not part of list responses and are therefore shown only after opening a document.
 
 ## Troubleshooting
 
@@ -83,4 +91,5 @@ Revision windows use explicit UTC midnights and the backend's exclusive `end` bo
 - **Vite proxy connection refused:** confirm `WEBINTEL_API_PROXY_TARGET` points to the FastAPI origin, then restart Vite after changing `.env.local`.
 - **Empty dashboard:** this is a valid state. Ingest documents with the existing backend workflows; the frontend never substitutes demo data.
 - **Invalid server response:** the UI validates analytics payloads at runtime. Confirm the running backend matches this repository's dashboard service contracts.
+- **Document not found:** verify the route contains the complete 64-character SHA-256 document ID and that the current document still exists in the configured database.
 - **Production cross-origin failure:** use a same-origin reverse proxy. Do not enable wildcard CORS with credentials.
