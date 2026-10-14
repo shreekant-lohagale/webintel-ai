@@ -15,6 +15,7 @@ from app.api.routes.ask import (
     router as ask_router,
 )
 from app.api.routes.health import router as health_router
+from app.api.routes.monitoring import router as monitoring_router
 from app.api.routes.documents import (
     router as documents_router,
 )
@@ -184,6 +185,7 @@ def create_app(
     api_router.include_router(ask_router)
     api_router.include_router(analytics_router)
     api_router.include_router(topic_analytics_router)
+    api_router.include_router(monitoring_router)
 
     application.include_router(api_router)
 
