@@ -10,6 +10,7 @@ function errorPresentation(error?: Error): { title: string; detail: string } {
   if (error instanceof ApiError) {
     if (error.kind === 'timeout') return { title: 'Generation timed out', detail: 'The retrieval or language-model request exceeded the response window.' }
     if (error.kind === 'invalid-response') return { title: 'Invalid assistant response', detail: error.message }
+    if (error.status === 429) return { title: 'Usage limit reached', detail: 'Too many assistant requests were submitted. Wait briefly before retrying.' }
     if (error.status === 502) return { title: 'Provider returned invalid output', detail: error.message }
     if (error.status === 503 && /LLM provider/i.test(error.message)) return { title: 'Language-model provider unavailable', detail: error.message }
     if (error.status === 503) return { title: 'RAG service unavailable', detail: error.message }

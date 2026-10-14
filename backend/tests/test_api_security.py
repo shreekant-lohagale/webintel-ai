@@ -130,6 +130,28 @@ def test_request_id_header(monkeypatch):
 
     assert response.status_code == 200
     assert "X-Request-ID" in response.headers
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+
+
+def test_documentation_can_be_disabled():
+    from app.api.config import Settings
+
+    settings = Settings(
+        app_title="WebIntel Test API",
+        app_version="test",
+        debug=False,
+        mongodb_uri="mongodb://127.0.0.1:27018",
+        mongodb_database="test",
+        docs_enabled=False,
+    )
+    app = create_app(settings=settings, connect_db=False)
+
+    with TestClient(app) as client:
+        assert client.get("/docs").status_code == 404
+        assert client.get("/openapi.json").status_code == 404
+        assert client.get("/").json()["documentation"] is None
 
 
 def test_cancel_endpoint_in_openapi(monkeypatch):

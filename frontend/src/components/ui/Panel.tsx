@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 export function Panel({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`panel ${className}`}>{children}</section>
+  return <section className={`panel min-w-0 ${className}`}>{children}</section>
 }
 
 export function PanelHeader({

@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { configure } from '@testing-library/dom'
+
+configure({ asyncUtilTimeout: 3_000 })
 
 class ResizeObserverMock implements ResizeObserver {
   observe() {}

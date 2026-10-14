@@ -11,7 +11,7 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   '/assistant': { title: 'AI Assistant', description: 'Ask independent questions and inspect verified supporting evidence.' },
   '/topics': { title: 'Topic Intelligence', description: 'Track deterministic keyword patterns and trends.' },
   '/monitoring': { title: 'Source Monitoring', description: 'Review provenance coverage and observation age.' },
-  '/settings': { title: 'Settings', description: 'Configure your WebIntel AI workspace.' },
+  '/settings': { title: 'Settings', description: 'Inspect connection status, build metadata, and methodology.' },
 }
 
 export function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
@@ -46,13 +46,15 @@ export function TopBar({ onMenuOpen }: { onMenuOpen: () => void }) {
           </button>
           <div className="min-w-0">
             <h1 className="truncate font-display text-base font-semibold text-slate-50 sm:text-lg">{meta.title}</h1>
-            <p className="hidden truncate text-xs text-slate-500 sm:block">{meta.description}</p>
+            <p className="hidden truncate text-xs text-slate-400 sm:block">{meta.description}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <div
             className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 text-xs"
-            title={health.isSuccess ? `Connected to ${health.data.database}` : 'Backend readiness check'}
+            title={health.isSuccess ? 'Backend connection ready' : 'Backend readiness check'}
+            role="status"
+            aria-live="polite"
           >
             <span
               className={`size-2 rounded-full ${

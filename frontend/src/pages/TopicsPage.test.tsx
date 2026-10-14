@@ -5,6 +5,12 @@ import { MemoryRouter } from 'react-router-dom'
 import { App } from '../app/App'
 import { domainTopicsFixture, topicFixture, trendsFixture } from '../test/intelligenceFixtures'
 
+vi.mock('recharts', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('recharts')>()
+  const { TestResponsiveContainer } = await import('../test/ResponsiveContainerMock')
+  return { ...actual, ResponsiveContainer: TestResponsiveContainer }
+})
+
 const json = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }))
 function renderTopics(entry = '/topics') { const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } }); return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><App /></MemoryRouter></QueryClientProvider>) }
 function topicFetch(input: RequestInfo | URL, init?: RequestInit) { void init; const url = String(input); if (url.includes('/health/')) return json({ status: 'ready', database: 'test' }); if (url.includes('/topics/domains')) return json(domainTopicsFixture); if (url.includes('/topics/trends')) return json(trendsFixture); return json(topicFixture) }

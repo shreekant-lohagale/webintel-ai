@@ -32,7 +32,7 @@ export function DashboardPage() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">Live intelligence workspace</p>
-          <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Intelligence Overview</h2>
+          <div className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Intelligence Overview</div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">A grounded view of corpus scale, source coverage, and observed change—without synthetic metrics.</p>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-slate-500" aria-live="polite">

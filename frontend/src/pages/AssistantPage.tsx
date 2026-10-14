@@ -31,7 +31,9 @@ export function AssistantPage() {
     onSettled: () => { controllerRef.current = null },
   })
 
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [turns])
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [turns])
 
   const runRequest = (turnId: string, request: AskRequest) => {
     const controller = new AbortController()
@@ -61,7 +63,7 @@ export function AssistantPage() {
   return (
     <div className="-mx-4 -my-6 flex min-h-[calc(100vh-5rem)] flex-col sm:-mx-6 lg:-mx-8 lg:-my-8">
       <header className="border-b border-white/[0.06] px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-4xl flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">Grounded research workspace</p><h2 className="mt-1 font-display text-xl font-semibold text-white">WebIntel AI Assistant</h2><p className="mt-1 text-xs text-slate-500">Source-grounded answers with backend-verified quotations. Conversation history is visual only.</p></div><div className="flex gap-2"><button type="button" onClick={() => clear(false)} disabled={!turns.length} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.07] px-3 text-[10px] text-slate-500 hover:bg-white/[0.04] hover:text-slate-300 disabled:opacity-35"><Trash2 size={12} />Clear conversation</button><button type="button" onClick={() => clear(true)} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-teal-300/15 bg-teal-300/[0.05] px-3 text-[10px] font-medium text-teal-300 hover:bg-teal-300/[0.09]"><MessageSquarePlus size={12} />New conversation</button></div></div>
+        <div className="mx-auto flex max-w-4xl flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">Grounded research workspace</p><div className="mt-1 font-display text-xl font-semibold text-white">Evidence-first answers</div><p className="mt-1 text-xs text-slate-400">Source-grounded answers with backend-verified quotations. Conversation history is visual only.</p></div><div className="flex gap-2"><button type="button" onClick={() => clear(false)} disabled={!turns.length} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-white/[0.07] px-3 text-[10px] text-slate-400 hover:bg-white/[0.04] hover:text-slate-200 disabled:opacity-35"><Trash2 size={12} />Clear conversation</button><button type="button" onClick={() => clear(true)} className="focus-ring inline-flex h-9 items-center gap-2 rounded-lg border border-teal-300/15 bg-teal-300/[0.05] px-3 text-[10px] font-medium text-teal-300 hover:bg-teal-300/[0.09]"><MessageSquarePlus size={12} />New conversation</button></div></div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto">{turns.length ? <MessageList turns={turns} onRetry={retry} /> : <SuggestedQuestions onSelect={(question) => { setDraft(question); setValidationError(null); textareaRef.current?.focus() }} />}<div ref={bottomRef} /></div>
       <ChatComposer value={draft} validationError={validationError} generating={mutation.isPending} mode={mode} topK={topK} documentType={documentType} sourceDomain={sourceDomain} textareaRef={textareaRef} onChange={(value) => { setDraft(value); if (validationError) setValidationError(null) }} onSubmit={submit} onCancel={() => controllerRef.current?.abort()} onModeChange={setMode} onTopKChange={setTopK} onDocumentTypeChange={setDocumentType} onSourceDomainChange={setSourceDomain} />

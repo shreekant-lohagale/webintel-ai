@@ -37,10 +37,10 @@ function renderDashboard() {
 }
 
 describe('DashboardPage', () => {
-  it('shows loading skeletons while HTTP requests are pending', () => {
+  it('shows loading skeletons while HTTP requests are pending', async () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => undefined)))
     const { container } = renderDashboard()
-    expect(screen.getByText('Awaiting data snapshot')).toBeInTheDocument()
+    expect(await screen.findByText('Awaiting data snapshot')).toBeInTheDocument()
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
   })
 

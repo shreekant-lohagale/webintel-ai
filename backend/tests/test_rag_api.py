@@ -185,3 +185,31 @@ def test_ask_in_openapi():
         "/api/v1/ask"
         in response.json()["paths"]
     )
+
+
+def test_ask_rate_limit_is_enforced(monkeypatch):
+    monkeypatch.setenv(
+        "WEBINTEL_INFERENCE_RATE_LIMIT_PER_MINUTE",
+        "1",
+    )
+    app = create_app(connect_db=False)
+    app.dependency_overrides[get_rag_service] = (
+        lambda: FakeRAGService()
+    )
+
+    try:
+        with TestClient(app) as client:
+            first = client.post(
+                "/api/v1/ask",
+                json={"question": "First question"},
+            )
+            second = client.post(
+                "/api/v1/ask",
+                json={"question": "Second question"},
+            )
+
+        assert first.status_code == 200
+        assert second.status_code == 429
+        assert second.headers["Retry-After"] == "60"
+    finally:
+        app.dependency_overrides.clear()

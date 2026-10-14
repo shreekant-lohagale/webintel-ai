@@ -4,9 +4,14 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '..', '')
+  const buildId = env.WEBINTEL_BUILD_ID?.trim() || 'development'
 
   return {
     plugins: [react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.1.0'),
+      __BUILD_ID__: JSON.stringify(buildId),
+    },
     server: {
       port: 5173,
       proxy: {

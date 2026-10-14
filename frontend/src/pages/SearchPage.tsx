@@ -58,7 +58,7 @@ export function SearchPage() {
 
   return (
     <div className="space-y-5">
-      <section><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">Evidence retrieval</p><h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Intelligence Search</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Search indexed source chunks using lexical, semantic, or fused retrieval. Results identify relevant evidence—not verified claims.</p></section>
+      <section><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-300/80">Evidence retrieval</p><div className="mt-2 font-display text-2xl font-semibold tracking-tight text-white sm:text-[28px]">Intelligence Search</div><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Search indexed source chunks using lexical, semantic, or fused retrieval. Results identify relevant evidence—not verified claims.</p></section>
       <SearchControls
         draft={draft} mode={mode} limit={limit} documentType={documentType} sourceDomain={sourceDomain}
         validationError={validationError} searching={results.isFetching} inputRef={inputRef}

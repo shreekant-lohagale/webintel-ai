@@ -31,6 +31,18 @@ router = APIRouter(
 )
 
 
+def enforce_inference_rate_limit(request: Request) -> None:
+    """Apply a bounded local-process cost guard before RAG work."""
+    limiter = getattr(request.app.state, "inference_limiter", None)
+    identity = request.client.host if request.client else "unknown"
+    if limiter is not None and not limiter.check(identity):
+        raise HTTPException(
+            status_code=429,
+            detail="Inference rate limit exceeded",
+            headers={"Retry-After": "60"},
+        )
+
+
 async def get_rag_service(
     request: Request,
 ) -> RAGService:
@@ -81,6 +93,7 @@ async def get_rag_service(
     "",
     response_model=AskResponse,
     summary="Ask an evidence-grounded question",
+    dependencies=[Depends(enforce_inference_rate_limit)],
 )
 async def ask_question(
     payload: AskRequest,

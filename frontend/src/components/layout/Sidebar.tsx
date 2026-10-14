@@ -10,6 +10,7 @@ import {
   Tags,
   X,
 } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Brand } from './Brand'
 
@@ -31,26 +32,54 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: SidebarProps) {
-  const content = (
+  const mobileDialogRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!mobileOpen) return
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const dialog = mobileDialogRef.current
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])
+    focusable()[0]?.focus()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); onMobileClose(); return }
+      if (event.key !== 'Tab') return
+      const items = focusable()
+      if (!items.length) return
+      const first = items[0]!
+      const last = items[items.length - 1]!
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+      previouslyFocused?.focus()
+    }
+  }, [mobileOpen, onMobileClose])
+
+  const renderContent = (mobile: boolean) => (
     <>
       <div className="flex h-20 items-center justify-between border-b border-white/[0.06] px-5">
         <Brand compact={collapsed} />
-        <button
+        {!mobile && <button
           className="focus-ring hidden rounded-lg p-2 text-slate-500 transition hover:bg-white/5 hover:text-slate-200 lg:block"
           type="button"
           onClick={onToggle}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
-        <button
+        </button>}
+        {mobile && <button
           className="focus-ring rounded-lg p-2 text-slate-400 hover:bg-white/5 lg:hidden"
           type="button"
           onClick={onMobileClose}
           aria-label="Close navigation"
         >
           <X size={20} />
-        </button>
+        </button>}
       </div>
       <nav className="flex-1 space-y-1.5 px-3 py-5" aria-label="Primary navigation">
         {navigation.map(({ label, to, icon: Icon }) => (
@@ -83,7 +112,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Workspace</p>
           <p className="mt-1.5 text-xs text-slate-300">Public web intelligence</p>
           <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500">
-            <span className="size-1.5 rounded-full bg-teal-400" /> Phase 6 · Foundation
+            <span className="size-1.5 rounded-full bg-slate-500" /> Release candidate
           </div>
         </div>
       )}
@@ -95,7 +124,7 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
       <aside
         className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-white/[0.06] bg-[#080e1a]/95 backdrop-blur-xl transition-[width] duration-200 lg:flex ${collapsed ? 'w-[76px]' : 'w-[248px]'}`}
       >
-        {content}
+        {renderContent(false)}
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -105,8 +134,8 @@ export function Sidebar({ collapsed, mobileOpen, onToggle, onMobileClose }: Side
             onClick={onMobileClose}
             aria-label="Close navigation overlay"
           />
-          <aside className="relative flex h-full w-[min(86vw,300px)] flex-col border-r border-white/10 bg-[#080e1a] shadow-2xl">
-            {content}
+          <aside ref={mobileDialogRef} role="dialog" aria-modal="true" aria-label="Navigation menu" className="relative flex h-full w-[min(86vw,300px)] flex-col border-r border-white/10 bg-[#080e1a] shadow-2xl">
+            {renderContent(true)}
           </aside>
         </div>
       )}

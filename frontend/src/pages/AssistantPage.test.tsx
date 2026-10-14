@@ -101,6 +101,14 @@ describe('AssistantPage', () => {
     expect(await screen.findByText('Generation timed out')).toBeInTheDocument()
   })
 
+  it('explains inference rate limits without exposing backend details', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => String(input).includes('/health/') ? healthResponse() : Promise.resolve(response({ detail: 'Inference rate limit exceeded' }, 429))))
+    renderAssistant()
+    await ask()
+    expect(await screen.findByText('Usage limit reached')).toBeInTheDocument()
+    expect(screen.getByText(/Wait briefly before retrying/)).toBeInTheDocument()
+  })
+
   it('cancels an in-flight generation and allows retry', async () => {
     let requestSignal: AbortSignal | undefined
     vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL, init?: RequestInit) => {

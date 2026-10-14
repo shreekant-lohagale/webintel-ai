@@ -17,6 +17,7 @@ class Settings:
     debug: bool
     mongodb_uri: str
     mongodb_database: str
+    docs_enabled: bool = True
 
 
 def get_settings() -> Settings:
@@ -47,4 +48,8 @@ def get_settings() -> Settings:
             "MONGODB_DATABASE",
             "webintel_ai",
         ),
+        docs_enabled=os.getenv(
+            "WEBINTEL_API_DOCS_ENABLED",
+            "true",
+        ).lower() in ("1", "true", "yes"),
     )

@@ -69,6 +69,13 @@ def create_app(
         app.state.submission_limiter = SubmissionLimiter(
             max_requests=max(1, min(limit, 10000))
         )
+        inference_limit = int(os.getenv(
+            "WEBINTEL_INFERENCE_RATE_LIMIT_PER_MINUTE",
+            "5",
+        ))
+        app.state.inference_limiter = SubmissionLimiter(
+            max_requests=max(1, min(inference_limit, 1000))
+        )
 
         if not connect_db:
             yield
@@ -118,6 +125,7 @@ def create_app(
             app.state.mongodb_database = None
             app.state.mongodb_client = None
             app.state.submission_limiter = None
+            app.state.inference_limiter = None
 
             await client.close()
 
@@ -130,9 +138,11 @@ def create_app(
             "web crawling and evidence-grounded retrieval."
         ),
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
+        docs_url="/docs" if settings.docs_enabled else None,
+        redoc_url="/redoc" if settings.docs_enabled else None,
+        openapi_url=(
+            "/openapi.json" if settings.docs_enabled else None
+        ),
     )
 
     @application.middleware("http")
@@ -163,6 +173,12 @@ def create_app(
         )
 
         response.headers["X-Request-ID"] = request_id
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
 
         logger.info(
             "HTTP request",
@@ -201,7 +217,7 @@ def create_app(
             "name": settings.app_title,
             "version": settings.app_version,
             "api_prefix": "/api/v1",
-            "documentation": "/docs",
+            "documentation": "/docs" if settings.docs_enabled else None,
         }
 
     return application
